@@ -1,0 +1,35 @@
+# 在 GitHub 上同时构建 Windows 和 macOS 安装包
+# 用法：推送到 GitHub 后，在 Actions 页面手动运行，或推送 v* 标签（如 v0.1.0）
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+          - os: macos-latest
+            script: dist:mac
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run ${{ matrix.script }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HuaKai-${{ runner.os }}
+          path: |
+            release/*.zip
+            release/*.dmg

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>花开 · 手势控制花朵</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <header id="hud">
+      <h1>花开</h1>
+      <p id="hint">张开手掌，花朵绽放 · 握拳，花朵闭合</p>
+    </header>
+
+    <div id="meter"><div id="meter-fill"></div></div>
+    <div id="status">正在加载手势模型…</div>
+
+    <aside id="panel">
+      <div class="cam">
+        <video id="video" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="row"><span>张开度</span><b id="v-open">0%</b></div>
+      <div class="row"><span>原始比值</span><b id="v-raw">-</b></div>
+      <div class="row"><span>检测</span><b id="v-fps">-</b></div>
+      <div class="btns">
+        <button id="cal-closed">记录握拳</button>
+        <button id="cal-open">记录张开</button>
+        <button id="cal-reset">重置</button>
+      </div>
+      <label class="row manual"><input type="checkbox" id="manual" /> 手动模式
+        <input type="range" id="slider" min="0" max="1" step="0.001" value="0" disabled />
+      </label>
+      <p class="tip">按 D 隐藏/显示面板，拖动画面可旋转视角</p>
+    </aside>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

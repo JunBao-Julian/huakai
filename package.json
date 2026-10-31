@@ -1,0 +1,78 @@
+{
+  "name": "huakai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "手势控制花开花合",
+  "author": "huakai",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "app": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.huakai.bloom",
+    "productName": "HuaKai",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "HuaKai-${version}-win-x64.${ext}",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "HuaKai-${version}-mac-${arch}.${ext}",
+      "category": "public.app-category.entertainment",
+      "identity": "-",
+      "extendInfo": {
+        "NSCameraUsageDescription": "需要使用摄像头识别手势，控制花朵开合。画面只在本机处理，不会上传。"
+      },
+      "hardenedRuntime": false
+    },
+    "dmg": {
+      "title": "HuaKai"
+    }
+  },
+  "devDependencies": {
+    "@mediapipe/tasks-vision": "^1.2.0",
+    "@types/three": "^0.187.0",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
