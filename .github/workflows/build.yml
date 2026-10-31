@@ -1,11 +1,9 @@
 # 在 GitHub 上同时构建 Windows 和 macOS 安装包
-# 用法：推送到 GitHub 后，在 Actions 页面手动运行，或推送 v* 标签（如 v0.1.0）
+# 用法：推送到 GitHub 后，在 Actions 页面手动运行（左侧 build → Run workflow）
 name: build
 
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
 
 jobs:
   build:
