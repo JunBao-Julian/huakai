@@ -1,7 +1,7 @@
 {
   "name": "huakai",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "手势控制花开花合",
   "author": "huakai",
   "type": "module",
@@ -11,6 +11,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "app": "npm run build && electron .",
+    "app:kiosk": "npm run build && electron . --kiosk",
     "dist:win": "npm run build && electron-builder --win --publish never",
     "dist:mac": "npm run build && electron-builder --mac --publish never"
   },
@@ -35,7 +36,13 @@
         }
       ],
       "artifactName": "HuaKai-${version}-win-x64.${ext}",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "extraFiles": [
+        {
+          "from": "public/content",
+          "to": "content"
+        }
+      ]
     },
     "mac": {
       "target": [

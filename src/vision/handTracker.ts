@@ -1,4 +1,5 @@
 import { FilesetResolver, HandLandmarker, type HandLandmarkerResult } from '@mediapipe/tasks-vision';
+import { log } from '../log';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -7,14 +8,16 @@ export class HandTracker {
   private landmarker: HandLandmarker | null = null;
   private lastVideoTime = -1;
   delegate: 'GPU' | 'CPU' = 'GPU';
+  /** 最近一次拿到新视频帧的时间，用于发现摄像头“卡住” */
+  lastFrameAt = 0;
 
-  async init(): Promise<void> {
+  async init(numHands: number): Promise<void> {
     const fileset = await FilesetResolver.forVisionTasks(`${BASE}wasm`);
     const make = (delegate: 'GPU' | 'CPU') =>
       HandLandmarker.createFromOptions(fileset, {
         baseOptions: { modelAssetPath: `${BASE}models/hand_landmarker.task`, delegate },
         runningMode: 'VIDEO',
-        numHands: 1,
+        numHands,
         minHandDetectionConfidence: 0.5,
         minHandPresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
@@ -22,10 +25,14 @@ export class HandTracker {
     try {
       this.landmarker = await make('GPU');
     } catch (e) {
-      console.warn('GPU 委托失败，回退到 CPU', e);
+      log('warning', `GPU 推理不可用，改用 CPU：${(e as Error).message}`);
       this.delegate = 'CPU';
       this.landmarker = await make('CPU');
     }
+  }
+
+  get ready() {
+    return !!this.landmarker;
   }
 
   /** 视频有新帧时返回检测结果，否则返回 null */
@@ -33,15 +40,25 @@ export class HandTracker {
     if (!this.landmarker || video.readyState < 2) return null;
     if (video.currentTime === this.lastVideoTime) return null;
     this.lastVideoTime = video.currentTime;
+    this.lastFrameAt = now;
     return this.landmarker.detectForVideo(video, now);
   }
 }
 
-export async function startCamera(video: HTMLVideoElement): Promise<void> {
+/** 打开摄像头；重复调用会先关掉旧的视频流 */
+export async function startCamera(video: HTMLVideoElement, width: number, height: number, onEnded: () => void) {
+  stopCamera(video);
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+    video: { width: { ideal: width }, height: { ideal: height }, facingMode: 'user' },
     audio: false,
   });
+  stream.getVideoTracks().forEach((t) => (t.onended = onEnded)); // 摄像头被拔掉时触发
   video.srcObject = stream;
   await video.play();
+}
+
+export function stopCamera(video: HTMLVideoElement) {
+  const old = video.srcObject as MediaStream | null;
+  old?.getTracks().forEach((t) => t.stop());
+  video.srcObject = null;
 }

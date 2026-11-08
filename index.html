@@ -3,37 +3,127 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>花开 · 手势控制花朵</title>
+    <title>花开 · 手势互动</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <div id="stage"></div>
 
     <header id="hud">
-      <h1>花开</h1>
-      <p id="hint">张开手掌，花朵绽放 · 握拳，花朵闭合</p>
+      <h1 id="title">花开</h1>
+      <p id="subtitle"></p>
     </header>
 
-    <div id="meter"><div id="meter-fill"></div></div>
-    <div id="status">正在加载手势模型…</div>
+    <div id="banner"></div>
 
-    <aside id="panel">
+    <aside id="card">
+      <h2 id="card-name"></h2>
+      <p id="card-latin"></p>
+      <dl id="card-rows"></dl>
+      <p id="card-intro"></p>
+    </aside>
+
+    <div id="hint">
+      <svg class="hand" viewBox="0 0 64 64" aria-hidden="true">
+        <rect class="f" x="17" y="8" width="6" height="26" rx="3" />
+        <rect class="f" x="25" y="4" width="6" height="30" rx="3" />
+        <rect class="f" x="33" y="6" width="6" height="28" rx="3" />
+        <rect class="f" x="41" y="11" width="6" height="23" rx="3" />
+        <rect class="thumb" x="6" y="30" width="6" height="18" rx="3" transform="rotate(-38 9 39)" />
+        <rect x="15" y="30" width="34" height="26" rx="10" />
+      </svg>
+      <div>
+        <div id="hint-text"></div>
+        <div id="hint-flower"></div>
+      </div>
+    </div>
+
+    <div id="meter"><div id="meter-fill"></div></div>
+    <div id="status"></div>
+
+    <!-- 隐藏的管理入口：依次点击 左上 → 右上 → 右下 → 左下 四个角，或按 Ctrl+Shift+A -->
+    <div class="corner" data-i="0" style="left: 0; top: 0"></div>
+    <div class="corner" data-i="1" style="right: 0; top: 0"></div>
+    <div class="corner" data-i="2" style="right: 0; bottom: 0"></div>
+    <div class="corner" data-i="3" style="left: 0; bottom: 0"></div>
+
+    <div id="pin" class="hidden">
+      <form id="pin-form">
+        <p>管理密码</p>
+        <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" />
+        <div class="btns">
+          <button type="submit">进入</button>
+          <button type="button" id="pin-cancel">取消</button>
+        </div>
+        <p id="pin-error"></p>
+      </form>
+    </div>
+
+    <aside id="admin" class="closed">
+      <div class="admin-head"><b>管理面板</b><button id="admin-close">关闭</button></div>
+
       <div class="cam">
         <video id="video" playsinline muted></video>
-        <canvas id="overlay"></canvas>
+        <canvas id="cam-overlay"></canvas>
       </div>
-      <div class="row"><span>张开度</span><b id="v-open">0%</b></div>
-      <div class="row"><span>原始比值</span><b id="v-raw">-</b></div>
-      <div class="row"><span>检测</span><b id="v-fps">-</b></div>
-      <div class="btns">
-        <button id="cal-closed">记录握拳</button>
-        <button id="cal-open">记录张开</button>
-        <button id="cal-reset">重置</button>
-      </div>
-      <label class="row manual"><input type="checkbox" id="manual" /> 手动模式
-        <input type="range" id="slider" min="0" max="1" step="0.001" value="0" disabled />
-      </label>
-      <p class="tip">按 D 隐藏/显示面板，拖动画面可旋转视角</p>
+
+      <section>
+        <h3>状态</h3>
+        <div class="kv" id="admin-status"></div>
+      </section>
+
+      <section>
+        <h3>互动区</h3>
+        <p class="tip">绿框内、足够大的手才会被识别。粉色是正在控制花朵的手。</p>
+        <label>左边界 <input type="range" id="zone-x" min="0" max="0.9" step="0.01" /></label>
+        <label>上边界 <input type="range" id="zone-y" min="0" max="0.9" step="0.01" /></label>
+        <label>宽度 <input type="range" id="zone-w" min="0.1" max="1" step="0.01" /></label>
+        <label>高度 <input type="range" id="zone-h" min="0.1" max="1" step="0.01" /></label>
+        <label>最小手掌 <input type="range" id="min-size" min="0.01" max="0.2" step="0.005" /></label>
+      </section>
+
+      <section>
+        <h3>校准基准</h3>
+        <p class="tip">一般不用动，程序会为每位游客自动校准。识别普遍偏紧 / 偏松时再调。</p>
+        <div class="btns">
+          <button id="cal-closed">记录握拳</button>
+          <button id="cal-open">记录张开</button>
+          <button id="cal-reset">恢复默认</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>花朵</h3>
+        <div class="btns">
+          <select id="flower-select"></select>
+          <button id="flower-next">下一朵</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>声音</h3>
+        <label>音量 <input type="range" id="volume" min="0" max="1" step="0.05" /></label>
+        <label class="check"><input type="checkbox" id="ambient" /> 背景音乐</label>
+      </section>
+
+      <section>
+        <h3>测试</h3>
+        <label class="check"><input type="checkbox" id="manual" /> 手动模式（不用摄像头）</label>
+        <label>张开度 <input type="range" id="slider" min="0" max="1" step="0.001" value="0" disabled /></label>
+      </section>
+
+      <section id="sys-section" class="hidden">
+        <h3>系统</h3>
+        <label class="check"><input type="checkbox" id="autostart" /> 开机自动启动</label>
+        <div class="btns">
+          <button id="sys-reload">重新加载</button>
+          <button id="sys-relaunch">重启程序</button>
+          <button id="sys-quit">退出程序</button>
+        </div>
+        <p class="tip" id="sys-info"></p>
+      </section>
+
+      <div class="btns"><button id="overrides-reset">清除本机所有调整</button></div>
     </aside>
 
     <script type="module" src="/src/main.ts"></script>

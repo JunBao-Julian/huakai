@@ -1,46 +1,19 @@
 import * as THREE from 'three';
 import { leafTextures, petalTextures } from './textures';
+import type { CompiledFlower, LayerDef, StamenDef } from './spec';
 
 /**
- * 程序化 3D 花朵（莲/芍药风格，多层花瓣）。
+ * 程序化 3D 花朵：形状、颜色、层数都来自 FlowerSpec（见 spec.ts 和 content/flowers）。
  * 每片花瓣有两个形态：
  *   - 闭合：包裹在一个“花苞”回转面上（同层花瓣半径错开，互不穿插）
  *   - 张开：沿弯曲中心线向外展开，带内凹和边缘波浪
  * 两个形态在“以花瓣基部为圆心的极坐标”里插值，看起来像真实地翻转展开，而不是直线缩放。
  */
 
-interface LayerDef {
-  n: number; // 花瓣数
-  L: number; // 长度
-  W: number; // 半宽
-  rb: number; // 闭合时花苞半径
-  pr: number; // 张开时基部半径
-  py: number; // 张开时基部高度
-  tilt: number; // 张开时与竖直方向夹角
-  bend: number; // 张开时尖端外翻程度
-  cup: number; // 张开时横向内凹
-  delay: number; // 开放延迟（外层先开）
-  tint: string;
-}
-
-const LAYERS: LayerDef[] = [
-  { n: 6, L: 1.3, W: 0.5, rb: 0.3, pr: 0.13, py: 0.0, tilt: 1.42, bend: 0.55, cup: 0.32, delay: 0.0, tint: '#ffffff' },
-  { n: 6, L: 1.2, W: 0.46, rb: 0.255, pr: 0.11, py: 0.04, tilt: 1.18, bend: 0.38, cup: 0.42, delay: 0.08, tint: '#fff6f8' },
-  { n: 6, L: 1.06, W: 0.42, rb: 0.21, pr: 0.09, py: 0.08, tilt: 0.95, bend: 0.22, cup: 0.55, delay: 0.16, tint: '#fff0f4' },
-  { n: 5, L: 0.88, W: 0.36, rb: 0.165, pr: 0.07, py: 0.11, tilt: 0.72, bend: 0.12, cup: 0.68, delay: 0.24, tint: '#ffeef3' },
-  { n: 5, L: 0.66, W: 0.3, rb: 0.12, pr: 0.05, py: 0.13, tilt: 0.5, bend: 0.05, cup: 0.8, delay: 0.32, tint: '#fff4f6' },
-];
-
-const SEPAL: LayerDef = {
-  n: 5, L: 0.62, W: 0.2, rb: 0.355, pr: 0.12, py: -0.06, tilt: 1.95, bend: 0.35, cup: 0.25, delay: 0, tint: '#ffffff',
-};
-
-const BUD_H = LAYERS[0].L * 0.96;
-const SPAN = 0.62; // 每层开放所占的进度区间
-
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const smooth = (x: number) => x * x * (3 - 2 * x);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const STAGGER = 0.007;
 
 /** 花瓣轮廓：基部窄、尖端圆 */
 function petalWidth(v: number) {
@@ -71,6 +44,8 @@ class Petal {
     private def: LayerDef,
     private theta: number,
     private rbClosed: number,
+    private budH: number,
+    ruffleScale: number,
     material: THREE.Material,
     private segU = 14,
     private segV = 24,
@@ -99,7 +74,7 @@ class Petal {
     // 每片花瓣的随机差异，让花更自然
     this.tilt = def.tilt + (Math.random() - 0.5) * 0.12;
     this.L = def.L * (0.95 + Math.random() * 0.08);
-    this.ruffle = 0.02 + Math.random() * 0.03;
+    this.ruffle = (0.02 + Math.random() * 0.03) * ruffleScale;
     this.phase = Math.random() * Math.PI * 2;
 
     this.mesh = new THREE.Mesh(this.geom, material);
@@ -133,7 +108,7 @@ class Petal {
       const v = j / segV;
       const sw = petalWidth(v) * def.W;
       const yc = v * L * 0.96;
-      const rc = this.rbClosed * budProfile(yc / BUD_H);
+      const rc = this.rbClosed * budProfile(yc / this.budH);
       const a = cA[j];
       const nx = -Math.cos(a), ny = Math.sin(a); // 指向花心/上方的法向
 
@@ -173,7 +148,7 @@ class Petal {
   }
 }
 
-/** 花蕊：实例化的花丝 + 花药 */
+/** 花蕊：实例化的花丝 + 花药，可选莲蓬状花托 */
 class Stamens {
   readonly group = new THREE.Group();
   private filaments: THREE.InstancedMesh;
@@ -186,30 +161,38 @@ class Stamens {
   private dir = new THREE.Vector3();
   private tip = new THREE.Vector3();
 
-  constructor(count = 120) {
+  constructor(private def: StamenDef) {
+    const count = def.count;
     const fGeo = new THREE.CylinderGeometry(0.0035, 0.005, 1, 5).translate(0, 0.5, 0);
     const aGeo = new THREE.SphereGeometry(1, 8, 6);
-    const fMat = new THREE.MeshStandardMaterial({ color: '#f3e3a0', roughness: 0.6 });
-    const aMat = new THREE.MeshStandardMaterial({ color: '#e8a422', roughness: 0.75, emissive: '#5a3000', emissiveIntensity: 0.25 });
+    const fMat = new THREE.MeshStandardMaterial({ color: def.filamentColor, roughness: 0.6 });
+    const aMat = new THREE.MeshStandardMaterial({
+      color: def.antherColor,
+      roughness: 0.75,
+      emissive: new THREE.Color(def.antherColor).multiplyScalar(0.35),
+      emissiveIntensity: 0.6,
+    });
     this.filaments = new THREE.InstancedMesh(fGeo, fMat, count);
     this.anthers = new THREE.InstancedMesh(aGeo, aMat, count);
     this.filaments.castShadow = this.anthers.castShadow = true;
     const golden = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < count; i++) {
-      const rr = 0.03 + 0.07 * Math.sqrt(i / count);
+      const rr = def.radius * (0.3 + 0.7 * Math.sqrt(i / count));
       const ang = i * golden;
       this.data.push({
         base: new THREE.Vector3(Math.sin(ang) * rr, 0.1, Math.cos(ang) * rr),
         ang,
-        len: 0.2 + Math.random() * 0.1,
-        spread: 0.25 + 0.75 * (rr / 0.1) + (Math.random() - 0.5) * 0.15,
+        len: def.length[0] + Math.random() * (def.length[1] - def.length[0]),
+        spread: def.spread * (0.25 + 0.75 * (rr / def.radius)) + (Math.random() - 0.5) * 0.15,
       });
     }
+    this.group.add(this.filaments, this.anthers);
+    if (!def.pod) return;
 
     // 花托（莲蓬状）
     const pod = new THREE.Mesh(
       new THREE.CylinderGeometry(0.075, 0.05, 0.09, 24),
-      new THREE.MeshStandardMaterial({ color: '#c9d46a', roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ color: def.pod, roughness: 0.8 }),
     );
     pod.position.y = 0.1;
     pod.castShadow = true;
@@ -224,10 +207,11 @@ class Stamens {
       this.m.makeTranslation(Math.sin(a) * r, 0.146, Math.cos(a) * r);
       dots.setMatrixAt(i, this.m);
     }
-    this.group.add(pod, dots, this.filaments, this.anthers);
+    this.group.add(pod, dots);
   }
 
   update(t: number, time: number) {
+    const a = this.def.antherSize;
     this.data.forEach((d, i) => {
       const sp = lerp(0.04, d.spread, t) + Math.sin(time * 1.3 + i) * 0.02 * t;
       this.dir.set(Math.sin(d.ang) * Math.sin(sp), Math.cos(sp), Math.cos(d.ang) * Math.sin(sp));
@@ -236,7 +220,7 @@ class Stamens {
       this.m.compose(d.base, this.q, this.s.set(1, len, 1));
       this.filaments.setMatrixAt(i, this.m);
       this.tip.copy(d.base).addScaledVector(this.dir, len);
-      this.m.compose(this.tip, this.q, this.s.set(0.011, 0.02, 0.011));
+      this.m.compose(this.tip, this.q, this.s.set(0.011 * a, 0.02 * a, 0.011 * a));
       this.anthers.setMatrixAt(i, this.m);
     });
     this.filaments.instanceMatrix.needsUpdate = true;
@@ -256,7 +240,7 @@ function leafGeometry(L: number, W: number) {
     // 沿长度弯曲下垂 + 沿主脉对折
     const y = v * L;
     const z = 0.28 * L * v * v - Math.abs(u) * w * 0.35 + Math.sin(v * 9 + u * 3) * 0.012 * Math.abs(u);
-    p.setXYZ(i, x, y * Math.cos(v * 0.9) , z + y * Math.sin(v * 0.9) * 0.5);
+    p.setXYZ(i, x, y * Math.cos(v * 0.9), z + y * Math.sin(v * 0.9) * 0.5);
   }
   g.computeVertexNormals();
   return g;
@@ -264,23 +248,19 @@ function leafGeometry(L: number, W: number) {
 
 export class Flower {
   readonly group = new THREE.Group();
-  private head = new THREE.Group();
+  readonly head = new THREE.Group();
   private layers: Petal[][] = [];
   private sepals: Petal[] = [];
-  private stamens = new Stamens();
+  private stamens: Stamens | null = null;
   private leaves: THREE.Object3D[] = [];
 
-  constructor() {
-    const petalTex = petalTextures([
-      [0, '#f7f0d8'],
-      [0.18, '#fbe8e6'],
-      [0.5, '#f7c3d2'],
-      [0.8, '#ee8fb0'],
-      [1, '#d9638e'],
-    ]);
+  constructor(readonly spec: CompiledFlower) {
+    const P = spec;
+    const petalTex = petalTextures(P.petalColors, P.edgeRGB, P.veinRGB);
     const leafTex = leafTextures();
+    const budH = P.layers[0].L * 0.96;
 
-    LAYERS.forEach((def, li) => {
+    P.layers.forEach((def, li) => {
       const mat = new THREE.MeshPhysicalMaterial({
         map: petalTex.map,
         bumpMap: petalTex.bump,
@@ -288,9 +268,9 @@ export class Flower {
         color: def.tint,
         roughness: 0.55,
         sheen: 0.8,
-        sheenColor: new THREE.Color('#ffd6e4'),
+        sheenColor: new THREE.Color(P.sheenColor),
         sheenRoughness: 0.45,
-        emissive: new THREE.Color('#ff7aa6'),
+        emissive: new THREE.Color(P.glowColor),
         emissiveMap: petalTex.map,
         emissiveIntensity: 0.06, // 模拟花瓣的透光感
         side: THREE.DoubleSide,
@@ -299,22 +279,28 @@ export class Flower {
       const offset = li * 0.55 + (li % 2) * (Math.PI / def.n);
       for (let i = 0; i < def.n; i++) {
         const theta = offset + (i / def.n) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
-        const p = new Petal(def, theta, def.rb + i * 0.007, mat);
+        const p = new Petal(def, theta, def.rb + i * STAGGER, budH, P.ruffle, mat);
         row.push(p);
         this.head.add(p.mesh);
       }
       this.layers.push(row);
     });
 
-    const sepalMat = new THREE.MeshStandardMaterial({
-      map: leafTex.map, bumpMap: leafTex.bump, bumpScale: 0.5, roughness: 0.7, side: THREE.DoubleSide,
-    });
-    for (let i = 0; i < SEPAL.n; i++) {
-      const p = new Petal(SEPAL, (i / SEPAL.n) * Math.PI * 2 + 0.3, SEPAL.rb + i * 0.006, sepalMat, 8, 14);
-      this.sepals.push(p);
-      this.head.add(p.mesh);
+    if (P.sepal) {
+      const S = P.sepal;
+      const sepalMat = new THREE.MeshStandardMaterial({
+        map: leafTex.map, bumpMap: leafTex.bump, bumpScale: 0.5, roughness: 0.7, side: THREE.DoubleSide,
+      });
+      for (let i = 0; i < S.n; i++) {
+        const p = new Petal(S, (i / S.n) * Math.PI * 2 + 0.3, S.rb + i * 0.006, budH, 0.5, sepalMat, 8, 14);
+        this.sepals.push(p);
+        this.head.add(p.mesh);
+      }
     }
-    this.head.add(this.stamens.group);
+    if (P.stamens) {
+      this.stamens = new Stamens(P.stamens);
+      this.head.add(this.stamens.group);
+    }
 
     // 花托下方的膨大部分
     const stemMat = new THREE.MeshStandardMaterial({ map: leafTex.map, roughness: 0.65 });
@@ -363,18 +349,34 @@ export class Flower {
   /** openness ∈ [0,1] */
   update(openness: number, time: number) {
     const o = clamp01(openness);
+    const { layers, span } = this.spec;
     this.layers.forEach((row, li) => {
-      const t = smooth(clamp01((o - LAYERS[li].delay) / SPAN));
+      const t = smooth(clamp01((o - layers[li].delay) / span));
       for (const p of row) p.update(t, time);
     });
     const ts = smooth(clamp01(o / 0.55));
     for (const p of this.sepals) p.update(ts, time);
-    this.stamens.update(smooth(clamp01((o - 0.25) / 0.75)), time);
+    this.stamens?.update(smooth(clamp01((o - 0.25) / 0.75)), time);
 
     // 微风摆动 + 盛开时花头微微上扬
     this.head.rotation.z = Math.sin(time * 0.7) * 0.025;
     this.head.rotation.x = Math.sin(time * 0.5 + 1) * 0.02 - o * 0.05;
     this.head.scale.setScalar(1 + o * 0.06);
     this.leaves.forEach((l, i) => (l.rotation.z = Math.sin(time * 0.8 + i * 2) * 0.04));
+  }
+
+  /** 释放显存（切换花朵时调用） */
+  dispose() {
+    const textures = new Set<THREE.Texture>();
+    this.group.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.dispose();
+      for (const m of ([] as THREE.Material[]).concat(mesh.material)) {
+        for (const v of Object.values(m)) if (v instanceof THREE.Texture) textures.add(v);
+        m.dispose();
+      }
+    });
+    textures.forEach((t) => t.dispose());
   }
 }

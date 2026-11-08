@@ -1,0 +1,21 @@
+{
+  "title": "花开",
+  "subtitle": "张开手掌，花朵绽放 · 握拳，花朵闭合",
+  "flowers": ["lotus", "tulip", "peony"],
+  "timing": {
+    "leaveTimeout": 8,
+    "bloomHold": 0.8,
+    "cardDuration": 15,
+    "breathPeriod": 6
+  },
+  "vision": {
+    "numHands": 2,
+    "camera": { "width": 1280, "height": 720 },
+    "zone": { "x": 0.1, "y": 0.0, "w": 0.8, "h": 1.0 },
+    "minHandSize": 0.05,
+    "calibration": { "closed": 1.15, "open": 1.85 }
+  },
+  "audio": { "volume": 0.6, "ambient": true },
+  "admin": { "pin": "2580" },
+  "kiosk": { "dailyRestart": "03:00" }
+}

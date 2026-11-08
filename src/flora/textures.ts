@@ -48,7 +48,7 @@ function speckle(ctx: CanvasRenderingContext2D, w: number, h: number, alpha: num
   }
 }
 
-export function petalTextures(stops: [number, string][]) {
+export function petalTextures(stops: [number, string][], edgeRGB = '190,40,90', veinRGB = '185,50,105') {
   const w = 512, h = 1024;
   const [c, ctx] = canvas(w, h);
   const g = ctx.createLinearGradient(0, h, 0, 0);
@@ -58,15 +58,15 @@ export function petalTextures(stops: [number, string][]) {
 
   // 边缘略深、中间略亮
   const side = ctx.createLinearGradient(0, 0, w, 0);
-  side.addColorStop(0, 'rgba(190,40,90,0.22)');
+  side.addColorStop(0, `rgba(${edgeRGB},0.22)`);
   side.addColorStop(0.25, 'rgba(255,255,255,0)');
   side.addColorStop(0.5, 'rgba(255,255,255,0.08)');
   side.addColorStop(0.75, 'rgba(255,255,255,0)');
-  side.addColorStop(1, 'rgba(190,40,90,0.22)');
+  side.addColorStop(1, `rgba(${edgeRGB},0.22)`);
   ctx.fillStyle = side;
   ctx.fillRect(0, 0, w, h);
 
-  drawVeins(ctx, w, h, 'rgba(185,50,105,0.16)', 34, 1.6);
+  drawVeins(ctx, w, h, `rgba(${veinRGB},0.16)`, 34, 1.6);
   speckle(ctx, w, h, 0.05);
 
   // 凹凸贴图：叶脉凸起
