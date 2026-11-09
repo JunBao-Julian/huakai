@@ -21,9 +21,29 @@ async function main() {
 
   const overlay = new Overlay();
   overlay.setTitle(cfg.title, cfg.subtitle);
-  const scene = new BloomScene(document.getElementById('stage')!, !kiosk);
+  const scene = new BloomScene(document.getElementById('stage')!, !kiosk, cfg.render.quality);
   let flowerIdx = 0;
   scene.setFlower(flowers[0]);
+
+  // 预览模式：?preview&flower=peony&open=0.8[&still] —— 不开摄像头、不显示界面，固定开度，
+  // 用来检查改过的花朵数据，或给文档截图。still 表示画面静止（不旋转、不摆动）。
+  const params = new URLSearchParams(location.search);
+  if (params.has('preview')) {
+    const i = flowers.findIndex((f) => f.id === params.get('flower'));
+    if (i >= 0) scene.setFlower(flowers[(flowerIdx = i)]);
+    const open = Math.min(1, Math.max(0, parseFloat(params.get('open') ?? '1') || 0));
+    const still = params.has('still');
+    document.body.classList.add('preview');
+    scene.setAutoRotate(!still);
+    let prev = performance.now();
+    const loop = (now: number) => {
+      requestAnimationFrame(loop);
+      scene.render(open, still ? 0 : now / 1000, Math.min(0.05, Math.max(0, (now - prev) / 1000)));
+      prev = now;
+    };
+    requestAnimationFrame(loop);
+    return;
+  }
 
   const sound = new Sound(cfg.audio.volume, cfg.audio.ambient);
   sound.start();

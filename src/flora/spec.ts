@@ -41,7 +41,11 @@ export interface StamenSpec {
   filamentColor?: string;
   antherColor?: string;
   pod?: string | false; // 莲蓬颜色，false 表示没有
+  style?: 'lotus' | 'default'; // lotus：莲蓬 + 外围一圈花蕊
+  pistil?: string | false; // 雌蕊颜色（如郁金香），false 表示没有
 }
+
+export type FoliageKind = 'lotus' | 'tulip' | 'leaves' | 'none';
 
 export interface FlowerSpec {
   id: string;
@@ -58,6 +62,13 @@ export interface FlowerSpec {
     layers: LayerSpec[]; // 从外到内
     sepals?: SepalSpec | false;
     stamens?: StamenSpec | false;
+    /** 花瓣轮廓：tip 尖度 0（圆头）~1（尖头），widest 最宽处位置，base 根部宽度 */
+    petalShape?: { tip?: number; widest?: number; base?: number };
+    translucency?: number; // 透光强度 0~1.5，默认 0.8
+    transmitColor?: string; // 透光颜色，默认取 glowColor
+    veins?: number; // 花瓣叶脉条数，默认 70
+    foliage?: FoliageKind; // 叶子：lotus 荷叶 / tulip 带状叶 / leaves 茎生叶 / none
+    stemColor?: string;
   };
 }
 
@@ -85,6 +96,8 @@ export interface StamenDef {
   filamentColor: string;
   antherColor: string;
   pod: string | null;
+  style: 'lotus' | 'default';
+  pistil: string | null;
 }
 
 export interface CompiledFlower {
@@ -101,6 +114,12 @@ export interface CompiledFlower {
   layers: LayerDef[];
   sepal: LayerDef | null;
   stamens: StamenDef | null;
+  petalShape: { tip: number; widest: number; base: number };
+  transmit: number;
+  transmitColor: string;
+  veins: number;
+  foliage: FoliageKind;
+  stemColor: string;
 }
 
 const DEG = Math.PI / 180;
@@ -191,6 +210,8 @@ export function compileFlower(spec: FlowerSpec): CompiledFlower {
       filamentColor: s.filamentColor ?? '#f3e3a0',
       antherColor: s.antherColor ?? '#e8a422',
       pod: s.pod === undefined ? '#c9d46a' : s.pod || null,
+      style: s.style === 'lotus' ? 'lotus' : 'default',
+      pistil: s.pistil || null,
     };
   }
 
@@ -208,6 +229,16 @@ export function compileFlower(spec: FlowerSpec): CompiledFlower {
     layers,
     sepal,
     stamens,
+    petalShape: {
+      tip: num(A.petalShape?.tip ?? 0, 'petalShape.tip', 0, 1),
+      widest: num(A.petalShape?.widest ?? 0.62, 'petalShape.widest', 0.3, 0.85),
+      base: num(A.petalShape?.base ?? 0.16, 'petalShape.base', 0.02, 0.6),
+    },
+    transmit: num(A.translucency ?? 0.8, 'translucency', 0, 1.5),
+    transmitColor: A.transmitColor ?? A.glowColor ?? '#ff7aa6',
+    veins: Math.round(num(A.veins ?? 70, 'veins', 0, 200)),
+    foliage: (['lotus', 'tulip', 'leaves', 'none'] as const).includes(A.foliage as never) ? A.foliage! : 'leaves',
+    stemColor: A.stemColor ?? '#4f7a2e',
   };
 }
 

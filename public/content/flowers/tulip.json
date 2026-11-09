@@ -10,7 +10,28 @@
     "intro": "原产中亚及土耳其一带，16 世纪传入欧洲后风靡一时。郁金香喜冷凉，球根秋季种下、春季开花；花朵白天张开、夜晚闭合。"
   },
   "appearance": {
-    "petalColors": [[0, "#f4c534"], [0.14, "#f2a12a"], [0.32, "#e5482e"], [0.75, "#d22a2e"], [1, "#b81d2c"]],
+    "petalColors": [
+      [
+        0,
+        "#f4c534"
+      ],
+      [
+        0.14,
+        "#f2a12a"
+      ],
+      [
+        0.32,
+        "#e5482e"
+      ],
+      [
+        0.75,
+        "#d22a2e"
+      ],
+      [
+        1,
+        "#b81d2c"
+      ]
+    ],
     "edgeColor": "#780a14",
     "veinColor": "#96141e",
     "sheenColor": "#ffb0a0",
@@ -18,10 +39,55 @@
     "ruffle": 1,
     "span": 0.8,
     "layers": [
-      { "count": 3, "length": 1.15, "width": 0.55, "openAngle": 54, "tipCurl": 17, "cup": 0.85, "budRadius": 0.34, "baseRadius": 0.1, "baseHeight": 0, "delay": 0 },
-      { "count": 3, "length": 1.08, "width": 0.52, "openAngle": 40, "tipCurl": 11, "cup": 0.9, "budRadius": 0.29, "baseRadius": 0.08, "baseHeight": 0.03, "delay": 0.12, "tint": "#fff2ee" }
+      {
+        "count": 3,
+        "length": 1.15,
+        "width": 0.55,
+        "openAngle": 54,
+        "tipCurl": 17,
+        "cup": 0.85,
+        "budRadius": 0.34,
+        "baseRadius": 0.1,
+        "baseHeight": 0,
+        "delay": 0
+      },
+      {
+        "count": 3,
+        "length": 1.08,
+        "width": 0.52,
+        "openAngle": 40,
+        "tipCurl": 11,
+        "cup": 0.9,
+        "budRadius": 0.29,
+        "baseRadius": 0.08,
+        "baseHeight": 0.03,
+        "delay": 0.12,
+        "tint": "#fff2ee"
+      }
     ],
     "sepals": false,
-    "stamens": { "count": 6, "filamentColor": "#3b2a34", "antherColor": "#2a1a26", "pod": false }
+    "stamens": {
+      "count": 6,
+      "radius": 0.045,
+      "length": [
+        0.22,
+        0.25
+      ],
+      "antherSize": 2.2,
+      "filamentColor": "#3b2a34",
+      "antherColor": "#2a1a26",
+      "pod": false,
+      "pistil": "#cdd8a0"
+    },
+    "petalShape": {
+      "tip": 0.15,
+      "widest": 0.62,
+      "base": 0.35
+    },
+    "translucency": 0.6,
+    "transmitColor": "#ff6040",
+    "veins": 60,
+    "foliage": "tulip",
+    "stemColor": "#6f8f55"
   }
 }

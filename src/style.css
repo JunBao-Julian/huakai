@@ -85,3 +85,6 @@ body.kiosk.admin-open { cursor: auto; }
 .btns select option { color: #000; }
 .btns button:hover { background: rgba(255,255,255,0.16); }
 .tip { margin: 4px 0; opacity: 0.45; font-size: 11px; line-height: 1.6; }
+
+/* 预览模式：只显示花朵 */
+body.preview #hud, body.preview #hint, body.preview #meter, body.preview #status, body.preview #banner, body.preview #card, body.preview .corner { display: none; }

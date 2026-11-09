@@ -30,6 +30,8 @@ export interface ExhibitConfig {
   audio: { volume: number; ambient: boolean };
   admin: { pin: string };
   kiosk: { dailyRestart: string | null };
+  /** 画面质量：high 全部效果；medium 关闭环境光遮蔽；low 只保留基础渲染（性能较弱的电脑） */
+  render: { quality: 'high' | 'medium' | 'low' };
 }
 
 export const DEFAULT_CONFIG: ExhibitConfig = {
@@ -47,6 +49,7 @@ export const DEFAULT_CONFIG: ExhibitConfig = {
   audio: { volume: 0.6, ambient: true },
   admin: { pin: '2580' },
   kiosk: { dailyRestart: '03:00' },
+  render: { quality: 'high' },
 };
 
 /** 允许在本机覆盖的配置项 */

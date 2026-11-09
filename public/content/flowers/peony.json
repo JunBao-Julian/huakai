@@ -7,22 +7,97 @@
     "bloom": "4–5 月",
     "meaning": "富贵、圆满",
     "location": "",
-    "intro": "被誉为“花中之王”，花大色艳、层层叠叠。牡丹是落叶灌木，喜凉爽、怕湿热，洛阳、菏泽的牡丹最为有名。"
+    "intro": "被誉为“花中之王”，花大色艳。按花瓣层数分单瓣、半重瓣和重瓣等类型，这是一朵半重瓣牡丹，中间可以看到金黄的雄蕊。牡丹是落叶灌木，喜凉爽、怕湿热，洛阳、菏泽的牡丹最为有名。"
   },
   "appearance": {
-    "petalColors": [[0, "#f8e0e8"], [0.2, "#f3b4cb"], [0.55, "#e7709f"], [0.85, "#d6457f"], [1, "#c93a74"]],
-    "ruffle": 2.6,
-    "span": 0.55,
-    "layers": [
-      { "count": 6, "length": 1.15, "width": 0.55, "openAngle": 85, "tipCurl": 23, "cup": 0.5, "budRadius": 0.36, "baseRadius": 0.15, "baseHeight": 0, "delay": 0 },
-      { "count": 6, "length": 1.06, "width": 0.5, "openAngle": 73, "tipCurl": 17, "cup": 0.6, "budRadius": 0.315, "baseRadius": 0.13, "baseHeight": 0.03, "delay": 0.06, "tint": "#fff8fa" },
-      { "count": 6, "length": 0.96, "width": 0.45, "openAngle": 62, "tipCurl": 13, "cup": 0.7, "budRadius": 0.27, "baseRadius": 0.11, "baseHeight": 0.06, "delay": 0.12, "tint": "#fff4f7" },
-      { "count": 5, "length": 0.86, "width": 0.4, "openAngle": 50, "tipCurl": 9, "cup": 0.78, "budRadius": 0.225, "baseRadius": 0.09, "baseHeight": 0.09, "delay": 0.18, "tint": "#fff0f5" },
-      { "count": 5, "length": 0.74, "width": 0.35, "openAngle": 39, "tipCurl": 6, "cup": 0.85, "budRadius": 0.18, "baseRadius": 0.07, "baseHeight": 0.11, "delay": 0.24, "tint": "#ffecf2" },
-      { "count": 5, "length": 0.62, "width": 0.3, "openAngle": 27, "tipCurl": 3, "cup": 0.9, "budRadius": 0.135, "baseRadius": 0.05, "baseHeight": 0.13, "delay": 0.3, "tint": "#ffe8f0" },
-      { "count": 5, "length": 0.5, "width": 0.25, "openAngle": 16, "tipCurl": 0, "cup": 0.95, "budRadius": 0.09, "baseRadius": 0.03, "baseHeight": 0.15, "delay": 0.36, "tint": "#ffe4ee" }
+    "petalColors": [
+      [
+        0,
+        "#fbeef2"
+      ],
+      [
+        0.25,
+        "#f8cfdc"
+      ],
+      [
+        0.6,
+        "#f0a3bd"
+      ],
+      [
+        0.88,
+        "#e4799d"
+      ],
+      [
+        1,
+        "#d96a92"
+      ]
     ],
-    "sepals": { "count": 5, "budRadius": 0.4 },
-    "stamens": { "count": 120 }
+    "ruffle": 0.9,
+    "span": 0.7,
+    "layers": [
+      {
+        "count": 6,
+        "length": 1.15,
+        "width": 0.62,
+        "openAngle": 72,
+        "tipCurl": 18,
+        "cup": 0.6,
+        "budRadius": 0.34,
+        "baseRadius": 0.2,
+        "baseHeight": 0
+      },
+      {
+        "count": 6,
+        "length": 1.05,
+        "width": 0.56,
+        "openAngle": 58,
+        "tipCurl": 12,
+        "cup": 0.7,
+        "baseRadius": 0.19,
+        "baseHeight": 0.03,
+        "tint": "#fff6f9"
+      },
+      {
+        "count": 5,
+        "length": 0.9,
+        "width": 0.48,
+        "openAngle": 44,
+        "tipCurl": 6,
+        "cup": 0.8,
+        "baseRadius": 0.18,
+        "baseHeight": 0.06,
+        "tint": "#fff0f5"
+      }
+    ],
+    "sepals": {
+      "count": 5,
+      "budRadius": 0.4
+    },
+    "stamens": {
+      "count": 280,
+      "radius": 0.17,
+      "length": [
+        0.1,
+        0.16
+      ],
+      "spread": 50,
+      "filamentColor": "#f6e2a0",
+      "antherColor": "#f0b020",
+      "pod": "#c9506c"
+    },
+    "petalShape": {
+      "tip": 0,
+      "widest": 0.66,
+      "base": 0.22
+    },
+    "translucency": 0.8,
+    "transmitColor": "#ff98bc",
+    "veins": 80,
+    "foliage": "leaves",
+    "stemColor": "#4f6e33",
+    "edgeColor": "#c85a82",
+    "veinColor": "#c8708f",
+    "glowColor": "#ff8fb4",
+    "sheenColor": "#ffe4ee"
   }
 }
